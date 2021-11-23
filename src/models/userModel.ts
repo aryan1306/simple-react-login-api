@@ -19,6 +19,9 @@ export class UserClass {
 	@Field()
 	@prop({ required: true })
 	public password!: string;
+
+	@prop({ default: 0 })
+	tokenVersion: number;
 }
 
 export const UserModel = getModelForClass(UserClass);

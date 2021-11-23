@@ -82,12 +82,19 @@ export class UserResolver {
 		//refresh token
 
 		res.cookie(
-			"vID",
-			sign({ userId: user._id.toString() }, process.env.REFRESH_TOKEN_SECRET!, {
-				expiresIn: "7d",
-			}),
+			"vId",
+
+			sign(
+				{ userId: user._id.toString(), tokenVersion: user.tokenVersion },
+				process.env.REFRESH_TOKEN_SECRET!,
+				{
+					expiresIn: "7d",
+				}
+			),
 			{
 				httpOnly: true,
+				// sameSite: "none",
+				// secure: true,
 			}
 		);
 
