@@ -57,6 +57,11 @@ import { UserModel } from "./models/userModel";
 			),
 			{
 				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				domain:
+					process.env.NODE_ENV === "production"
+						? "unruffled-agnesi-4625df.netlify.app"
+						: undefined,
 			}
 		);
 		// new accessToken
@@ -87,7 +92,7 @@ import { UserModel } from "./models/userModel";
 		} as ConnectOptions)
 		.then((_m) => console.log("DB connected"))
 		.catch((err) => console.log(err));
-	app.listen(4000, () => {
+	app.listen(parseInt(process.env.PORT!), () => {
 		console.log("server started on port 4000");
 	});
 })();

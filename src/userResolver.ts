@@ -29,17 +29,37 @@ export class UserResolver {
 		return "hi!!";
 	}
 
+	@Query(() => UserClass)
+	@UseMiddleware(isAuth)
+	async me(@Ctx() { payload }: MyContext) {
+		try {
+			const user = await UserModel.findOne({ id: payload?.userId });
+			return user;
+		} catch (err) {
+			// console.log(err);
+			throw new ApolloError(err);
+		}
+	}
+
 	@Query(() => String)
 	@UseMiddleware(isAuth)
 	bye(@Ctx() { payload }: MyContext) {
 		return `your userId is ${payload?.userId}`;
 	}
 
-	@Mutation(() => UserClass)
+	@Mutation(() => Boolean)
+	async logout(@Ctx() { res }: MyContext) {
+		res.cookie("vId", "", { httpOnly: true });
+
+		return true;
+	}
+
+	@Mutation(() => LoginResponse)
 	async register(
 		@Arg("name") name: string,
 		@Arg("email") email: string,
-		@Arg("password") password: string
+		@Arg("password") password: string,
+		@Ctx() { res }: MyContext
 	) {
 		const existingUser = await UserModel.findOne({ email });
 		if (existingUser) {
@@ -60,7 +80,36 @@ export class UserResolver {
 			password: hashedPassword,
 		});
 		await user.save();
-		return user;
+		res.cookie(
+			"vId",
+
+			sign(
+				{ userId: user._id.toString(), tokenVersion: user.tokenVersion },
+				process.env.REFRESH_TOKEN_SECRET!,
+				{
+					expiresIn: "7d",
+				}
+			),
+			{
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				domain:
+					process.env.NODE_ENV === "production"
+						? "unruffled-agnesi-4625df.netlify.app"
+						: undefined,
+			}
+		);
+
+		//access token
+		return {
+			accessToken: sign(
+				{ userId: user._id.toString() },
+				process.env.TOKEN_SECRET!,
+				{
+					expiresIn: "1h",
+				}
+			),
+		};
 	}
 
 	@Mutation(() => LoginResponse)
@@ -93,8 +142,11 @@ export class UserResolver {
 			),
 			{
 				httpOnly: true,
-				// sameSite: "none",
-				// secure: true,
+				secure: process.env.NODE_ENV === "production",
+				domain:
+					process.env.NODE_ENV === "production"
+						? "unruffled-agnesi-4625df.netlify.app"
+						: undefined,
 			}
 		);
 

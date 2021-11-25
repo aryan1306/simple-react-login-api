@@ -8,7 +8,7 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsnd --respawn src/index.ts",
-		"start": "node dist/index.js"
+		"start": "ts-node src/index.ts"
 	},
 	"devDependencies": {
 		"@types/cookie-parser": "^1.4.2",
